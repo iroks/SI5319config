@@ -13,34 +13,8 @@
 #include "driver/i2c.h"
 
 /**
- * TEST CODE BRIEF
+ * TEST CODE BRIEF for clock_card10
  *
- * This example will show you how to use I2C module by running two tasks on i2c bus:
- *
- * - read external i2c sensor, here we use a BH1750 light sensor(GY-30 module) for instance.
- * - Use one I2C port(master mode) to read or write the other I2C port(slave mode) on one ESP32 chip.
- *
- * Pin assignment:
- *
- * - slave :
- *    GPIO25 is assigned as the data signal of i2c slave port
- *    GPIO26 is assigned as the clock signal of i2c slave port
- * - master:
- *    GPIO18 is assigned as the data signal of i2c master port
- *    GPIO19 is assigned as the clock signal of i2c master port
- *
- * Connection:
- *
- * - connect GPIO18 with GPIO25
- * - connect GPIO19 with GPIO26
- * - connect sda/scl of sensor with GPIO18/GPIO19
- * - no need to add external pull-up resistors, driver will enable internal pull-up resistors.
- *
- * Test items:
- *
- * - read the sensor data, if connected.
- * - i2c master(ESP32) will write data to i2c slave(ESP32).
- * - i2c master(ESP32) will read data from i2c slave(ESP32).
  */
 
 #define DATA_LENGTH                        512              /*!<Data buffer length for test buffer*/
@@ -76,30 +50,97 @@
 SemaphoreHandle_t print_mux = NULL;
 
 /**
- * @brief test code to read esp-i2c-slave
- *        We need to fill the buffer of esp slave device, then master can read them out.
+ * @brief test code to read esp-i2c-slave register
+ *
  *
  * _______________________________________________________________________________________
  * | start | slave_addr + rd_bit +ack | read n-1 bytes + ack | read 1 byte + nack | stop |
  * --------|--------------------------|----------------------|--------------------|------|
  *
  */
-static esp_err_t i2c_example_master_read_slave(i2c_port_t i2c_num, uint8_t* data_rd, size_t size)
+static esp_err_t i2c_master_read_register(i2c_port_t i2c_num, uint8_t reg, uint8_t* buf, size_t bufsize)
 {
-    if (size == 0) {
+
+    esp_err_t ret;
+    if (bufsize == 0) {
         return ESP_OK;
     }
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, ( ESP_SLAVE_ADDR << 1 ) | READ_BIT, ACK_CHECK_EN);
-    if (size > 1) {
-        i2c_master_read(cmd, data_rd, size - 1, ACK_VAL);
-    }
-    i2c_master_read_byte(cmd, data_rd + size - 1, NACK_VAL);
+    i2c_master_write_byte(cmd, ( ESP_SLAVE_ADDR << 1 ) | WRITE_BIT, ACK_CHECK_EN);
+
+    ret =i2c_master_write_byte (cmd, reg, ACK_CHECK_EN);
+
+                if (ret != ESP_OK) {
+                            printf("%s: error sending i2c register ...skip...\n", esp_err_to_name(ret));
+                            return ret;
+                        }
+
     i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
+
+    ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+
+    cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+
+    i2c_master_write_byte(cmd, ( ESP_SLAVE_ADDR << 1 ) | READ_BIT, ACK_CHECK_EN);
+
+    i2c_master_read_byte(cmd, buf, NACK_VAL);
+
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     return ret;
+}
+
+
+
+static esp_err_t i2c_master_write_register(i2c_port_t i2c_num, uint8_t reg, uint8_t value){
+
+    esp_err_t ret=0;
+    i2c_cmd_handle_t cmd;
+    cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    ret=i2c_master_write_byte(cmd, ( ESP_SLAVE_ADDR << 1 ) | WRITE_BIT, ACK_CHECK_EN);
+            if (ret != ESP_OK) {
+                        printf("%s: No ack, SI5319 not connected...skip...\n", esp_err_to_name(ret));
+                        return ret;
+                    }
+
+
+        ret =i2c_master_write_byte (cmd, reg, ACK_CHECK_EN);
+
+                if (ret != ESP_OK) {
+                            printf("%s: error sending i2c register ...skip...\n", esp_err_to_name(ret));
+                            return ret;
+                        }
+
+
+        ret = i2c_master_write_byte (cmd, value, ACK_CHECK_EN);
+
+                if (ret != ESP_OK) {
+                            printf("%s: error sending register value ...skip... \n", esp_err_to_name(ret));
+                            return ret;
+                        }
+
+
+        i2c_master_stop(cmd);
+
+            ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
+
+                   if (ret != ESP_OK) {
+                                    printf("%s: trigger sending queued commands failed ...skip... \n", esp_err_to_name(ret));
+                                    return ret;
+                                }
+
+
+        i2c_cmd_link_delete(cmd);
+
+        return ret;
+
+
+
 }
 
 /**
@@ -113,7 +154,7 @@ static esp_err_t i2c_example_master_read_slave(i2c_port_t i2c_num, uint8_t* data
  * --------|---------------------------|----------------------|------|
  *
  */
-static esp_err_t i2c_example_master_write_slave(i2c_port_t i2c_num, uint8_t* data_wr, size_t size)
+static esp_err_t i2c_master_write_registers(i2c_port_t i2c_num, uint8_t* data_wr, size_t size)
 {
 
     esp_err_t ret=0;
@@ -121,42 +162,12 @@ static esp_err_t i2c_example_master_write_slave(i2c_port_t i2c_num, uint8_t* dat
 
     for (int i=0; i<size; i+=2){
 
-    cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    ret=i2c_master_write_byte(cmd, ( ESP_SLAVE_ADDR << 1 ) | WRITE_BIT, ACK_CHECK_EN);
+
+        ret = i2c_master_write_register (i2c_num, data_wr[i], data_wr[i+1]);
         if (ret != ESP_OK) {
-                    printf("%s: No ack, SI5319 not connected...skip...\n", esp_err_to_name(ret));
-                    return ret;
-                }
-
-
-    ret =i2c_master_write_byte (cmd, data_wr[i], ACK_CHECK_EN);
-
-            if (ret != ESP_OK) {
-                        printf("%s: error sending i2c register ...skip...\n", esp_err_to_name(ret));
-                        return ret;
-                    }
-
-
-    ret = i2c_master_write_byte (cmd, data_wr[i+1], ACK_CHECK_EN);
-
-            if (ret != ESP_OK) {
-                        printf("%s: error sending register value ...skip... \n", esp_err_to_name(ret));
-                        return ret;
-                    }
-
-
-    i2c_master_stop(cmd);
-
-        ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
-
-               if (ret != ESP_OK) {
-                                printf("%s: trigger sending queued commands failed ...skip... \n", esp_err_to_name(ret));
-                                return ret;
-                            }
-
-
-    i2c_cmd_link_delete(cmd);
+                            printf("%s: error sending i2c register ...skip...\n", esp_err_to_name(ret));
+                            return ret;
+                        }
 
     }
 
@@ -320,7 +331,8 @@ void app_main()
 
             size_t length = sizeof(data_wr)/sizeof(data_wr[0]);
 
-            int ret = i2c_example_master_write_slave( I2C_EXAMPLE_MASTER_NUM, data_wr, length);
+
+            int ret = i2c_master_write_registers( I2C_EXAMPLE_MASTER_NUM, data_wr, length);
             if (ret == ESP_OK) {
 
                 printf ("clock card initilized successfully \n");
@@ -328,8 +340,20 @@ void app_main()
             }
             else {printf ("error is occured %s", esp_err_to_name(ret));
 
-
             }
+
+            /*
+            example of reading SI5319 register
+            */
+
+            uint8_t reg = 0x30; //register to read
+            uint8_t buf[1] = {0x00}; //buffer
+            size_t sizebuf = sizeof(buf)/sizeof(buf[0]); //size
+
+
+            i2c_master_read_register (I2C_EXAMPLE_MASTER_NUM, reg, buf, sizebuf);
+
+            disp_buf (buf, 1);
 
 
 }
