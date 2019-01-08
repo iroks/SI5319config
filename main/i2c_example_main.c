@@ -246,6 +246,8 @@ void app_main()
 
           //registers description
           //https://www.silabs.com/documents/public/data-sheets/Si5319.pdf
+          //software for register configuration
+          //https://www.silabs.com/products/development-tools/timing/clock/si5319-evb-development-kit
 
           printf("28.8MHZ->40MHZ\n");
 
