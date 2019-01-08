@@ -26,9 +26,9 @@
 #define I2C_EXAMPLE_SLAVE_NUM              I2C_NUM_0        /*!<I2C port number for slave dev */
 #define I2C_EXAMPLE_SLAVE_TX_BUF_LEN       (2*DATA_LENGTH)  /*!<I2C slave tx buffer size */
 #define I2C_EXAMPLE_SLAVE_RX_BUF_LEN       (2*DATA_LENGTH)  /*!<I2C slave rx buffer size */
-
-#define I2C_EXAMPLE_MASTER_SCL_IO          19               /*!< gpio number for I2C master clock */
-#define I2C_EXAMPLE_MASTER_SDA_IO          18               /*!< gpio number for I2C master data  */
+//I2C gpio number in the latest CLK10
+#define I2C_EXAMPLE_MASTER_SCL_IO          5//19               /*!< gpio number for I2C master clock */
+#define I2C_EXAMPLE_MASTER_SDA_IO          10//18               /*!< gpio number for I2C master data  */
 #define I2C_EXAMPLE_MASTER_NUM             I2C_NUM_1        /*!< I2C port number for master dev */
 #define I2C_EXAMPLE_MASTER_TX_BUF_DISABLE  0                /*!< I2C master do not need buffer */
 #define I2C_EXAMPLE_MASTER_RX_BUF_DISABLE  0                /*!< I2C master do not need buffer */
@@ -108,6 +108,7 @@ static esp_err_t i2c_master_write_register(i2c_port_t i2c_num, uint8_t reg, uint
                         return ret;
                     }
 
+        printf ("first command sent successfully");
 
         ret =i2c_master_write_byte (cmd, reg, ACK_CHECK_EN);
 
