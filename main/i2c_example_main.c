@@ -108,7 +108,7 @@ static esp_err_t i2c_master_write_register(i2c_port_t i2c_num, uint8_t reg, uint
                         return ret;
                     }
 
-        printf ("first command sent successfully");
+        printf ("i2c command sent successfully");
 
         ret =i2c_master_write_byte (cmd, reg, ACK_CHECK_EN);
 
@@ -249,6 +249,92 @@ void app_main()
           //software for register configuration
           //https://www.silabs.com/products/development-tools/timing/clock/si5319-evb-development-kit
 
+
+
+          printf("25MHZ->28.8MHZ\n");
+
+
+	 uint8_t data_wr[] = {
+
+                                             0x00, 0x14,
+                                             0x02, 0x92,
+                                             0x03, 0x15,
+                                             0x05, 0x6d,
+                                             0x06, 0x2a,
+                                             0x08, 0x00,
+                                             0x0a, 0x00,
+                                             0x0b, 0x40,
+                                             0x13, 0x2c,
+                                             0x14, 0x3e,
+                                             0x16, 0xdf,
+                                             0x17, 0x1f,
+                                             0x18, 0x3f,
+                                             0x19, 0x20,
+                                             0x1f, 0x00,
+                                             0x20, 0x00,
+                                             0x21, 0x25,
+                                             0x28, 0x80,
+                                             0x29, 0x02,
+                                             0x2a, 0xab,
+                                             0x2b, 0x00,
+                                             0x2c, 0x00,
+                                             0x2d, 0x18,
+                                             0x2e, 0x00,
+                                             0x2f, 0x00,
+                                             0x30, 0x18,
+                                             0x83, 0x1f,
+                                             0x84, 0x02,
+                                             0x8a, 0x0f,
+                                             0x8b, 0xff,
+                                             0x88, 0x40
+
+
+	};
+
+
+/*
+          printf("28.8MHZ->28.8MHZ\n");
+
+                   uint8_t data_wr[] = {
+
+                                             0x00, 0x14,
+                                             0x02, 0xa2,
+                                             0x03, 0x15,
+                                             0x05, 0x6d,
+                                             0x06, 0x2a,
+                                             0x08, 0x00,
+                                             0x0a, 0x00,
+                                             0x0b, 0x40,
+                                             0x13, 0x2c,
+                                             0x14, 0x3e,
+                                             0x16, 0xdf,
+                                             0x17, 0x1f,
+                                             0x18, 0x3f,
+                                             0x19, 0x80,
+                                             0x1f, 0x00,
+                                             0x20, 0x00,
+                                             0x21, 0x17,
+                                             0x28, 0x20,
+                                             0x29, 0x02,
+                                             0x2a, 0x3f,
+                                             0x2b, 0x00,
+                                             0x2c, 0x00,
+                                             0x2d, 0x0e,
+                                             0x2e, 0x00,
+                                             0x2f, 0x00,
+                                             0x30, 0x0e,
+                                             0x83, 0x1f,
+                                             0x84, 0x02,
+                                             0x8a, 0x0f,
+                                             0x8b, 0xff,
+                                             0x88, 0x40
+
+                                             };
+
+*/
+
+          /*
+
           printf("28.8MHZ->40MHZ\n");
 
 
@@ -289,7 +375,7 @@ void app_main()
                                    };
 
 
-
+*/
 
 /*
 
