@@ -250,6 +250,47 @@ void app_main()
           //https://www.silabs.com/products/development-tools/timing/clock/si5319-evb-development-kit
 
 
+        printf("25MHZ->40MHZ\n");
+
+
+	 uint8_t data_wr[] = {
+
+                                             0x00, 0x14,
+                                             0x02, 0xA2,
+                                             0x03, 0x15,
+                                             0x05, 0x6d,
+                                             0x06, 0x2a,
+                                             0x08, 0x00,
+                                             0x0a, 0x00,
+                                             0x0b, 0x40,
+                                             0x13, 0x2c,
+                                             0x14, 0x3e,
+                                             0x16, 0xdf,
+                                             0x17, 0x1f,
+                                             0x18, 0x3f,
+                                             0x19, 0xc0,
+                                             0x1f, 0x00,
+                                             0x20, 0x00,
+                                             0x21, 0x0d,
+                                             0x28, 0x00,
+                                             0x29, 0x02,
+                                             0x2a, 0xd7,
+                                             0x2b, 0x00,
+                                             0x2c, 0x00,
+                                             0x2d, 0x0c,
+                                             0x2e, 0x00,
+                                             0x2f, 0x00,
+                                             0x30, 0x0c,
+                                             0x83, 0x1f,
+                                             0x84, 0x02,
+                                             0x8a, 0x0f,
+                                             0x8b, 0xff,
+                                             0x88, 0x40
+
+
+	};
+
+/*
 
           printf("25MHZ->28.8MHZ\n");
 
@@ -291,6 +332,7 @@ void app_main()
 
 	};
 
+*/
 
 /*
           printf("28.8MHZ->28.8MHZ\n");
